@@ -1,0 +1,422 @@
+package fuentes;
+
+import java_cup.runtime.Symbol;
+import codigo_3d.Interfaz_c3d;
+import java.util.Stack;
+
+//PARSER 
+parser code
+{://Codigo visible
+    
+    public void syntax_error(Symbol s){
+        System.err.println("ERROR R: ");
+        System.err.println(s);
+    }
+
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+        System.err.println("ERROR N_R: ");
+        System.err.println(s);
+    }
+
+:}
+
+action code
+{://Codigo de acciones vamos a simular atrubutos heredados con variables globales
+    String heredado="";
+    String aux="";
+    Stack<Display> display = new Stack<>();
+    Display tmp;
+:}
+
+terminal String ID,ENTERO,DECIMAL,MAS, MENOS, POR, DIV, POT;
+terminal String ABOVE,BELOW,ABOVEE,BELOWE,EQUAL,NEQUAL;
+terminal String OR,AND,XOR,NOT,NAND, INC, DEC; 
+terminal INT1,CHAR1, PAR_A, PAR_C, LLAV_A, LLAV_C, COMA, PYCOMA, ASIG;
+terminal MIENTRAS, HASTA, REPETIR, HACER, SI, SINO, SELEC, PARA, DETENER, CONTINUA;
+
+
+nonterminal String EXP,OP_REL, OPER;
+nonterminal  INICIO,SENTENCIAS, TIPO, S, L,DECLARA, ASIGNA, WHILE, DO_WHILE, FOR, IF, ELSE, SELECT, REPEAT;
+nonterminal Atributo_C3D LOG,REL;
+
+
+//agregamos la precedencia\
+
+precedence left OR,XOR;
+precedence left AND,NAND;
+precedence right NOT;
+precedence left ABOVE, BELOW, ABOVEE, BELOWE, EQUAL, NEQUAL;
+precedence left MAS, MENOS;
+precedence left POR, DIV; 
+precedence right POT; 
+
+
+start with INICIO;
+
+INICIO::=SENTENCIAS
+            {:
+                Generador_tmp.reset();
+            :}
+;
+
+SENTENCIAS ::= SENTENCIAS S
+    |S
+;
+
+S ::= LOG:log
+            {:
+                Interfaz_c3d.notificar(log.etq_true+":\n"+log.etq_false+":");
+                //Interfaz_c3d.notificar(" ");
+            :} 
+    | DECLARA
+            {:
+                //Interfaz_c3d.notificar(" ");
+            :}
+    | WHILE
+            {:
+                //Interfaz_c3d.notificar(" ");
+            :}
+    | ASIGNA
+            {:
+                //Interfaz_c3d.notificar(" ");
+            :}
+    | FOR
+            {:
+                //Interfaz_c3d.notificar(" ");
+            :}
+    | IF
+            {:
+                //Interfaz_c3d.notificar(" ");
+            :}
+    | SELECT
+            {:
+                
+            :}
+    | REPEAT
+            {:
+                 //Interfaz_c3d.notificar(" "); 
+            :}
+    | DO_WHILE
+            {:
+                //Interfaz_c3d.notificar(" ");
+            :}
+    | DETENER PYCOMA
+            {: //vamos a validar cuando aparecen estas expresiones
+                if(display.isEmpty()){
+                    Interfaz_c3d.notificar("ERROR: no existe una sentecia envolvente valida para detener");
+                }else{
+                    Interfaz_c3d.notificar("goto "+display.peek().et_salida);
+                }
+            :}
+    | CONTINUA PYCOMA
+            {:
+                if(display.isEmpty()){
+                    Interfaz_c3d.notificar("ERROR: no existe una sentecia envolvente valida para detener");
+                }else{
+                    if(display.peek().tipo==2){
+                        Interfaz_c3d.notificar("ERROR: la sentencia envolvnete no permite continue");
+                    }else{
+                        Interfaz_c3d.notificar("goto "+display.peek().et_inicio);
+                    }
+                }
+            :}
+;
+
+
+
+DO_WHILE ::=    HACER LLAV_A
+                    {:
+                        tmp =  new Display(Generador_tmp.genera_etq(),Generador_tmp.genera_etq(),1);
+                        display.push(tmp);
+                        aux=Generador_tmp.genera_etq();
+                        Interfaz_c3d.notificar(aux+":");
+                    :}
+                SENTENCIAS LLAV_C MIENTRAS 
+                    {:
+                        Interfaz_c3d.notificar(display.peek().et_inicio+":");
+                    :}
+                PAR_A LOG:log PAR_C
+                    {:
+                        Interfaz_c3d.notificar(log.etq_true+":");
+                        Interfaz_c3d.notificar("goto "+aux);
+                        Interfaz_c3d.notificar(log.etq_false+":");
+                        Interfaz_c3d.notificar(display.peek().et_salida+":");
+                        display.pop();
+                    :}
+;
+
+REPEAT ::=  REPETIR LLAV_A
+                {:
+                    tmp =  new Display(Generador_tmp.genera_etq(),Generador_tmp.genera_etq(),1);
+                    display.push(tmp);
+                    aux=Generador_tmp.genera_etq();
+                    Interfaz_c3d.notificar(aux+":");
+                :}
+            SENTENCIAS LLAV_C HASTA
+                {:
+                    Interfaz_c3d.notificar(display.peek().et_inicio+":");
+                :}
+            PAR_A LOG:log PAR_C
+                {:
+                    Interfaz_c3d.notificar(log.etq_false+":");
+                    Interfaz_c3d.notificar("goto "+aux);
+                    Interfaz_c3d.notificar(log.etq_true+":");
+                    Interfaz_c3d.notificar(display.peek().et_salida+":");
+                    display.pop();
+                :}
+;
+
+IF ::=  SI PAR_A LOG:log
+            {:
+                Interfaz_c3d.notificar(log.etq_true+":");
+            :}
+        PAR_C LLAV_A SENTENCIAS LLAV_C 
+            {: 
+                heredado=log.etq_false; 
+            :}
+        ELSE 
+;
+
+ELSE ::= SINO
+            {:
+                aux=Generador_tmp.genera_etq();
+                Interfaz_c3d.notificar("goto "+aux);
+                Interfaz_c3d.notificar(heredado+":");
+            :}
+        LLAV_A SENTENCIAS LLAV_C 
+            {:
+                Interfaz_c3d.notificar(aux+":");
+            :}
+
+        |
+            {:
+                Interfaz_c3d.notificar(heredado+":");
+            :}
+;
+
+FOR ::= PARA PAR_A INT1 ID:id 
+            {:
+                heredado=id;
+            :}  
+            ASIG EXP:exp PYCOMA
+            {:
+                Interfaz_c3d.notificar(id+"="+exp); //asigna el valor
+                tmp =  new Display(Generador_tmp.genera_etq(),Generador_tmp.genera_etq(),1);
+                display.push(tmp);
+                Interfaz_c3d.notificar(display.peek().et_inicio+":");
+            :}
+        LOG:log PYCOMA
+            {:
+                Interfaz_c3d.notificar(log.etq_true+":");
+            :}
+        OPER:op PAR_C LLAV_A SENTENCIAS LLAV_C
+            {:
+                Interfaz_c3d.notificar(op);    
+                Interfaz_c3d.notificar("goto "+display.peek().et_inicio); //etiqueta que retorna a la condición
+                Interfaz_c3d.notificar(log.etq_false+":");
+                Interfaz_c3d.notificar(display.peek().et_salida+":");
+                display.pop();
+            :}
+;
+
+OPER ::=    INC
+                {:
+                    String tmp=Generador_tmp.genera_tmp(); 
+                    RESULT=tmp+"="+heredado+"+1\n"+heredado+"="+tmp;
+                :}
+    |       DEC
+                {:
+                    String tmp=Generador_tmp.genera_tmp(); 
+                    RESULT=tmp+"="+heredado+"-1\n"+heredado+"="+tmp;
+                :}
+;
+
+WHILE ::=   MIENTRAS 
+            {:
+                tmp =  new Display(Generador_tmp.genera_etq(),Generador_tmp.genera_etq(),1);
+                display.push(tmp);
+                Interfaz_c3d.notificar(display.peek().et_inicio+":");
+            :}
+            PAR_A LOG:log PAR_C
+            {:
+                Interfaz_c3d.notificar(log.etq_true+":");
+            :}
+            LLAV_A SENTENCIAS LLAV_C
+            {:
+                Interfaz_c3d.notificar("goto "+display.peek().et_inicio); //etiqueta que retorna a la condición
+                Interfaz_c3d.notificar(log.etq_false+":");
+                Interfaz_c3d.notificar(display.peek().et_salida+":");
+                display.pop();
+            :}
+;
+
+LOG ::= LOG:rel1 OR
+            {:
+                Interfaz_c3d.notificar(rel1.etq_false+":");
+            :}
+            LOG:rel2
+            {:
+                RESULT = new Atributo_C3D();
+                RESULT.etq_true= rel1.etq_true+","+rel2.etq_true;  
+                RESULT.etq_false= rel2.etq_false;
+            :}
+    |   LOG:rel1 AND
+            {:
+                Interfaz_c3d.notificar(rel1.etq_true+":");
+            :}
+            LOG:rel2
+            {:
+                RESULT = new Atributo_C3D();
+                RESULT.etq_true= rel2.etq_true;  
+                RESULT.etq_false= rel1.etq_false+","+rel2.etq_false;
+            :}
+    |   LOG:rel1 XOR
+            {:
+                Interfaz_c3d.notificar(rel1.etq_false+":");
+            :}
+            LOG:rel2
+            {:
+                Interfaz_c3d.notificar(rel1.etq_true+":");
+                Interfaz_c3d.notificar(rel2.aux);
+                RESULT= new Atributo_C3D();
+                RESULT.etq_true =rel2.etq_true;
+                RESULT.etq_false=rel2.etq_false;
+            :}
+    |   LOG:rel1 NAND
+            {:
+                Interfaz_c3d.notificar(rel1.etq_true+":");
+            :}
+            LOG:rel2
+            {:
+                RESULT = new Atributo_C3D();
+                RESULT.etq_true= rel1.etq_false+","+rel2.etq_false;  
+                RESULT.etq_false= rel2.etq_true;
+            :}
+    |   NOT LOG:rel
+            {:
+                RESULT= new Atributo_C3D();
+                RESULT.etq_true = rel.etq_false;
+                RESULT.etq_false = rel.etq_true;
+            :}
+    |   REL:val
+            {:
+                RESULT=val;
+            :}
+;
+ 
+REL ::= EXP:t1 OP_REL:op EXP:t2
+            {:
+                RESULT= new Atributo_C3D();
+                RESULT.etq_true= Generador_tmp.genera_etq();
+                RESULT.etq_false= Generador_tmp.genera_etq();
+                //imprimimos la condicion de la expresion relacional con su saltos
+                Interfaz_c3d.notificar("if "+t1+op+t2+" then goto "+RESULT.etq_true+"\ngoto "+RESULT.etq_false);
+                // creamos la cadena temporal solo se usa en XOR
+                RESULT.aux= "if "+t1+op+t2+" then goto "+RESULT.etq_false+"\ngoto "+RESULT.etq_true; 
+            :}
+
+    |EXP:val
+            {:
+                RESULT= new Atributo_C3D();
+                RESULT.aux= val;
+            :}
+;
+
+OP_REL::= ABOVE:sim
+            {:
+                RESULT=sim;
+            :}
+    |     BELOW:sim
+            {:
+                RESULT=sim;
+            :}
+    |     ABOVEE:sim
+            {:
+                RESULT=sim;
+            :}
+    |     BELOWE:sim
+            {:
+                RESULT=sim;
+            :}
+    |     EQUAL:sim
+            {:
+                RESULT=sim;
+            :}
+    |     NEQUAL:sim
+            {:
+                RESULT=sim;
+            :}
+; 
+
+EXP ::= EXP:val MAS:sim EXP:val2
+            {:
+                RESULT=Generador_tmp.genera_tmp(); //sintetizo el temporal 
+                Interfaz_c3d.notificar(RESULT+"="+val+sim+val2); //imprimo la cadena la operacion
+            :}
+    |   EXP:val MENOS:sim EXP:val2
+            {:
+                RESULT=Generador_tmp.genera_tmp();
+                Interfaz_c3d.notificar(RESULT+"="+val+sim+val2);
+            :}
+    |   EXP:val POR:sim EXP:val2
+            {:
+                RESULT=Generador_tmp.genera_tmp();
+                Interfaz_c3d.notificar(RESULT+"="+val+sim+val2);
+            :}
+    |   EXP:val DIV:sim EXP:val2
+            {:
+                RESULT=Generador_tmp.genera_tmp();
+                Interfaz_c3d.notificar(RESULT+"="+val+sim+val2);
+            :}
+    |   EXP:val POT:sim EXP:val2
+            {:
+                RESULT=Generador_tmp.genera_tmp();
+                Interfaz_c3d.notificar(RESULT+"="+val+sim+val2);
+            :}
+    |   ID:val
+            {:
+                RESULT=val;
+            :}
+    |   ENTERO:val
+            {:
+                RESULT=val;
+            :}
+    |   DECIMAL:val 
+            {: 
+                RESULT=val;
+            :}
+    |MENOS:sim EXP:val
+            {:
+                RESULT=Generador_tmp.genera_tmp();
+                Interfaz_c3d.notificar(RESULT+"="+sim+val);
+            :}
+    |PAR_A LOG:val PAR_C
+            {:
+                RESULT = val.aux;
+            :}
+;
+
+ASIGNA ::= ID:id ASIG  EXP:exp PYCOMA 
+            {:
+                Interfaz_c3d.notificar(id+"="+exp);
+            :}
+;
+
+DECLARA ::= TIPO L PYCOMA 
+            {:
+                Interfaz_c3d.notificar("Reserva espacio y almacena el id de las variables.");
+            :}
+        | TIPO L ASIG EXP:exp PYCOMA
+            {:
+                Interfaz_c3d.notificar("Asigna "+exp+" a cada varibale declarada.");
+            :}
+;
+
+TIPO ::= INT1
+    |   CHAR1
+;
+
+L::= L COMA ID
+    | ID
+;
+
