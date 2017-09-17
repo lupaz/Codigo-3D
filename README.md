@@ -2,7 +2,7 @@
 Programa hecho en lenguaje java que genera codigo de tres direcciones de un lenguaje determinado con la ayuda de las herramientas
 Jflex y Cup.
 
-*Ejemplo del lenguaje reconocido*
+### Ejemplo del lenguaje reconocido:
 
 **Expresiones Aritmeticas (+,-,*,/,^)**
 * 5+5+8/2*(3^4)
@@ -29,7 +29,7 @@ Jflex y Cup.
 6. Repetir{ Sentencias }Hasta(Condicion);
 7. Seleccionar (Expresion) {  Casos  [Defecto] } 
 
-*Ejemplo de entrada del lenguaje*
+### Ejemplo de entrada del lenguaje:
 
 ```[java]
 //Expresion aritmetica, relacional y logica
