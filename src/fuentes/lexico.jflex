@@ -1,6 +1,7 @@
 package fuentes;
 
 import java_cup.runtime.Symbol;
+import Interfaz.Interfaz_c3d;
 
 //Scanner para generar C3D
 
@@ -25,7 +26,8 @@ PAR_C   = ")"
 LLAV_A  = "{"
 LLAV_C  = "}" 
 COMA    = ","
-PYCOMA  = ";" 
+PYCOMA  = ";"
+DPUNTO  = ":" 
 ASIG    = "="
 INC     = "++"
 DEC     = "--"
@@ -60,6 +62,9 @@ NOT     = "!"
 
 INT1     = "int"
 CHAR1    = "char"
+
+//sentencias
+
 MIENTRAS = "mientras"
 REPETIR   = "repetir"
 HASTA    = "hasta"
@@ -70,6 +75,8 @@ SELEC    = "seleccionar"
 HACER    = "hacer"
 DETENER  = "detener"
 CONTINUA = "continuar"
+CASO     = "caso"
+DEFECTO  = "defecto"  
 
 //expresiones
 
@@ -86,14 +93,16 @@ ENTER   = [\ \n]
 <YYINITIAL> {CHAR1}     { return new Symbol(sym.CHAR1, yyline, yycolumn,yytext());}
 <YYINITIAL> {MIENTRAS}  { return new Symbol(sym.MIENTRAS, yyline, yycolumn,yytext());}
 <YYINITIAL> {HASTA}     { return new Symbol(sym.HASTA, yyline, yycolumn,yytext());}
-<YYINITIAL> {REPETIR}    { return new Symbol(sym.REPETIR, yyline, yycolumn,yytext());}
+<YYINITIAL> {REPETIR}   { return new Symbol(sym.REPETIR, yyline, yycolumn,yytext());}
 <YYINITIAL> {PARA}      { return new Symbol(sym.PARA, yyline, yycolumn,yytext());}
 <YYINITIAL> {SI}        { return new Symbol(sym.SI, yyline, yycolumn,yytext());}
 <YYINITIAL> {SINO}      { return new Symbol(sym.SINO, yyline, yycolumn,yytext());}
 <YYINITIAL> {SELEC}     { return new Symbol(sym.SELEC, yyline, yycolumn,yytext());}
+<YYINITIAL> {CASO}      { return new Symbol(sym.CASO, yyline, yycolumn,yytext());}
 <YYINITIAL> {HACER}     { return new Symbol(sym.HACER, yyline, yycolumn,yytext());}
 <YYINITIAL> {DETENER}   { return new Symbol(sym.DETENER, yyline, yycolumn,yytext());}
 <YYINITIAL> {CONTINUA}  { return new Symbol(sym.CONTINUA, yyline, yycolumn,yytext());}
+<YYINITIAL> {DEFECTO}   { return new Symbol(sym.DEFECTO, yyline, yycolumn,yytext());}
 
 
 <YYINITIAL> {PAR_A}     {return new Symbol(sym.PAR_A, yyline, yycolumn,yytext());}
@@ -102,7 +111,10 @@ ENTER   = [\ \n]
 <YYINITIAL> {LLAV_C}    {return new Symbol(sym.LLAV_C, yyline, yycolumn,yytext());}
 <YYINITIAL> {COMA}      {return new Symbol(sym.COMA, yyline, yycolumn,yytext());}
 <YYINITIAL> {PYCOMA}    {return new Symbol(sym.PYCOMA, yyline, yycolumn,yytext());}
+<YYINITIAL> {DPUNTO}    {return new Symbol(sym.DPUNTO, yyline, yycolumn,yytext());}
 <YYINITIAL> {ASIG}      {return new Symbol(sym.ASIG, yyline, yycolumn,yytext());}
+<YYINITIAL> {INC}       {return new Symbol(sym.INC, yyline, yycolumn,yytext());}
+<YYINITIAL> {DEC}       {return new Symbol(sym.DEC, yyline, yycolumn,yytext());}
 
 //logicos
 <YYINITIAL> {OR}    {return new Symbol(sym.OR, yyline, yycolumn,yytext());}
@@ -135,6 +147,6 @@ ENTER   = [\ \n]
 <YYINITIAL> {ENTER}     { /*Saltos de linea, ignorados*/}
 
 <YYINITIAL> . {
-        String errLex = "Error léxico, caracter irreconocible: '"+yytext()+"' en la línea: "+(yyline+1)+" y columna: "+yycolumn;
-        System.err.println(errLex);
+        String errLex = "Error léxico : '"+yytext()+"' en la línea: "+(yyline+1)+" y columna: "+(yycolumn+1);
+        Interfaz_c3d.notificar_er(errLex);
 }

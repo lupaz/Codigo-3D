@@ -1,7 +1,7 @@
 package fuentes;
 
 import java_cup.runtime.Symbol;
-import codigo_3d.Interfaz_c3d;
+import Interfaz.Interfaz_c3d;
 import java.util.Stack;
 
 //PARSER 
@@ -9,13 +9,11 @@ parser code
 {://Codigo visible
     
     public void syntax_error(Symbol s){
-        System.err.println("ERROR R: ");
-        System.err.println(s);
+        Interfaz_c3d.notificar_er("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
     }
 
     public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
-        System.err.println("ERROR N_R: ");
-        System.err.println(s);
+        Interfaz_c3d.notificar_er("Error NR de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
     }
 
 :}
@@ -31,16 +29,16 @@ action code
 terminal String ID,ENTERO,DECIMAL,MAS, MENOS, POR, DIV, POT;
 terminal String ABOVE,BELOW,ABOVEE,BELOWE,EQUAL,NEQUAL;
 terminal String OR,AND,XOR,NOT,NAND, INC, DEC; 
-terminal INT1,CHAR1, PAR_A, PAR_C, LLAV_A, LLAV_C, COMA, PYCOMA, ASIG;
-terminal MIENTRAS, HASTA, REPETIR, HACER, SI, SINO, SELEC, PARA, DETENER, CONTINUA;
+terminal INT1,CHAR1, PAR_A, PAR_C, LLAV_A, LLAV_C, COMA, PYCOMA, DPUNTO, ASIG;
+terminal MIENTRAS, HASTA, REPETIR, HACER, SI, SINO, SELEC, CASO, DEFECTO, PARA, DETENER, CONTINUA;
 
 
-nonterminal String EXP,OP_REL, OPER;
-nonterminal  INICIO,SENTENCIAS, TIPO, S, L,DECLARA, ASIGNA, WHILE, DO_WHILE, FOR, IF, ELSE, SELECT, REPEAT;
+nonterminal String EXP,OP_REL, OPER, VAL;
+nonterminal  INICIO,SENTENCIAS, TIPO, S, L,DECLARA, ASIGNA, WHILE, DO_WHILE, FOR, IF, ELSE, SELECT, CASOS, C, DEF, REPEAT;
 nonterminal Atributo_C3D LOG,REL;
 
 
-//agregamos la precedencia\
+//agregamos la precedencia
 
 precedence left OR,XOR;
 precedence left AND,NAND;
@@ -90,7 +88,7 @@ S ::= LOG:log
             :}
     | SELECT
             {:
-                
+                //Interfaz_c3d.notificar(" ");
             :}
     | REPEAT
             {:
@@ -120,9 +118,64 @@ S ::= LOG:log
                     }
                 }
             :}
+    | error PYCOMA
+    | error LLAV_C
 ;
 
-SELECT ::= 
+SELECT ::=  SELEC PAR_A EXP:exp
+                {:
+                    tmp= new Display(Generador_tmp.genera_etq(),Generador_tmp.genera_etq(),2); //generamos las etiquetas de inicio y salida
+                    display.push(tmp);
+                    Interfaz_c3d.notificar("goto "+display.peek().et_inicio);
+                    heredado=exp; //valor a comparar con cada caso
+                    aux=""; //cadena donde llevaremos los saltos condicionales de los casos
+                :}
+            PAR_C LLAV_A CASOS  DEF LLAV_C
+                {:
+                    Interfaz_c3d.notificar(display.peek().et_inicio+":");
+                    Interfaz_c3d.notificar(aux);
+                    Interfaz_c3d.notificar(display.peek().et_salida+":");
+                    display.pop();
+                :}
+;
+
+CASOS ::= CASOS C
+        | C
+;
+
+C ::=   CASO VAL:val
+            {:
+                String et=Generador_tmp.genera_etq(); //generamos la etiqueta del caso
+                Interfaz_c3d.notificar(et+":"); // la escribimos antes de sus sentencias
+                aux+="if "+heredado+"=="+val+" goto "+et+"\n";
+            :}
+        DPUNTO SENTENCIAS
+;
+
+VAL ::= ENTERO:ent 
+            {:
+                RESULT=ent;
+            :}
+    |   DECIMAL:dec
+            {:
+                RESULT=dec;
+            :}
+;
+
+DEF ::= DEFECTO 
+            {:
+                String et=Generador_tmp.genera_etq(); //generamos la etiqueta del caso
+                Interfaz_c3d.notificar(et+":"); // la escribimos antes de sus sentencias
+                aux+="goto "+et+"\n";
+            :}
+        DPUNTO SENTENCIAS
+            {:
+                //a defecto despues de sus sentencias de una vez se le agrega la etiqueta de salida
+                Interfaz_c3d.notificar("goto "+display.peek().et_salida);
+            :}
+    | //empty
+;
+  
 
 DO_WHILE ::=    HACER LLAV_A
                     {:
@@ -135,7 +188,7 @@ DO_WHILE ::=    HACER LLAV_A
                     {:
                         Interfaz_c3d.notificar(display.peek().et_inicio+":");
                     :}
-                PAR_A LOG:log PAR_C
+                PAR_A LOG:log PAR_C PYCOMA
                     {:
                         Interfaz_c3d.notificar(log.etq_true+":");
                         Interfaz_c3d.notificar("goto "+aux);
@@ -156,7 +209,7 @@ REPEAT ::=  REPETIR LLAV_A
                 {:
                     Interfaz_c3d.notificar(display.peek().et_inicio+":");
                 :}
-            PAR_A LOG:log PAR_C
+            PAR_A LOG:log PAR_C PYCOMA
                 {:
                     Interfaz_c3d.notificar(log.etq_false+":");
                     Interfaz_c3d.notificar("goto "+aux);
@@ -260,6 +313,7 @@ LOG ::= LOG:rel1 OR
                 RESULT.etq_true= rel1.etq_true+","+rel2.etq_true;  
                 RESULT.etq_false= rel2.etq_false;
             :}
+
     |   LOG:rel1 AND
             {:
                 Interfaz_c3d.notificar(rel1.etq_true+":");
@@ -270,6 +324,7 @@ LOG ::= LOG:rel1 OR
                 RESULT.etq_true= rel2.etq_true;  
                 RESULT.etq_false= rel1.etq_false+","+rel2.etq_false;
             :}
+
     |   LOG:rel1 XOR
             {:
                 Interfaz_c3d.notificar(rel1.etq_false+":");
@@ -292,12 +347,14 @@ LOG ::= LOG:rel1 OR
                 RESULT.etq_true= rel1.etq_false+","+rel2.etq_false;  
                 RESULT.etq_false= rel2.etq_true;
             :}
+
     |   NOT LOG:rel
             {:
                 RESULT= new Atributo_C3D();
                 RESULT.etq_true = rel.etq_false;
                 RESULT.etq_false = rel.etq_true;
             :}
+
     |   REL:val
             {:
                 RESULT=val;

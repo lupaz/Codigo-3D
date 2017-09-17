@@ -11,7 +11,6 @@ package fuentes;
  */
 public class Atributo_C3D {
     
-   
     public String etq_true;
     public String etq_false;
     public String aux;

@@ -158,6 +158,9 @@ public class Interfaz_c3d extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void generarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generarActionPerformed
+        errores.setText("");
+        consola.setText("");
+        //agregamo las clases de los analizadores que se crean con jflex y cup
         String texto = entrada.getText();
         if(texto.isEmpty()){
             System.err.println("No es posible evaluar una cadena en blanco.");
