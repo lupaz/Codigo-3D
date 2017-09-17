@@ -5,9 +5,6 @@
  */
 package fuentes;
 
-import codigo_3d.Interfaz_c3d;
-
-
 /**
  *
  * @author Luis
@@ -25,5 +22,10 @@ public class Generador_tmp {
     static String genera_etq(){
         no_etq++;
         return "L"+no_etq;
+    }
+    
+    static void reset(){
+        no_etq=0;
+        no_tmp=0;
     }
 }

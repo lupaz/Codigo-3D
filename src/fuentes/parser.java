@@ -6,7 +6,7 @@
 package fuentes;
 
 import java_cup.runtime.Symbol;
-import codigo_3d.Interfaz_c3d;
+import Interfaz.Interfaz_c3d;
 import java.util.Stack;
 import java_cup.runtime.XMLElement;
 
