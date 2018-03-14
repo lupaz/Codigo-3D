@@ -62,7 +62,7 @@ mientras(y< 50 || x > 30 ){
 }
 
 hacer{
-	if(x==1){
+	si(x==1){
 		x=x*2;
 	}sino{
 		x=x*-1;
